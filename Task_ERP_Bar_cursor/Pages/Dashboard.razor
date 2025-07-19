@@ -1,0 +1,410 @@
+@page "/dashboard"
+@using Task_ERP_Bar.Models
+@using Task_ERP_Bar.Services
+@inject IApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>لوحة التحكم - ERP System</PageTitle>
+
+<!-- Header Section -->
+<header class="bg-gradient text-white p-4 rounded shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex align-items-center gap-3">
+                <h3 class="mb-0">
+                    <i class="bi bi-speedometer2 me-2"></i>
+                    @(selectedLanguage == "Arabic" ? "لوحة التحكم" : "Dashboard")
+                </h3>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- Language Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-globe me-1"></i>
+                        @selectedLanguage
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("English"))">English</a></li>
+                        <li><a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("Arabic"))">العربية</a></li>
+                    </ul>
+                </div>
+
+                <!-- Refresh Button -->
+                <button class="btn btn-light btn-sm" @onclick="LoadDashboardData" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    }
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "تحديث" : "Refresh")
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Alert Messages -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Statistics Cards -->
+<div class="container-fluid mt-4">
+    <div class="row g-4">
+        <!-- Accounts Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-bank text-primary fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">
+                                @(selectedLanguage == "Arabic" ? "الحسابات" : "Accounts")
+                            </h6>
+                            <h3 class="mb-0 fw-bold text-primary">@accountsCount</h3>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up me-1"></i>
+                                @(selectedLanguage == "Arabic" ? "نشط" : "Active")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="/accounts" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        @(selectedLanguage == "Arabic" ? "عرض الحسابات" : "View Accounts")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branches Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-building text-success fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">
+                                @(selectedLanguage == "Arabic" ? "الفروع" : "Branches")
+                            </h6>
+                            <h3 class="mb-0 fw-bold text-success">@branchesCount</h3>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up me-1"></i>
+                                @(selectedLanguage == "Arabic" ? "متاح" : "Available")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="/branches" class="btn btn-outline-success btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        @(selectedLanguage == "Arabic" ? "عرض الفروع" : "View Branches")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cities Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-geo-alt text-info fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">
+                                @(selectedLanguage == "Arabic" ? "المدن" : "Cities")
+                            </h6>
+                            <h3 class="mb-0 fw-bold text-info">@citiesCount</h3>
+                            <small class="text-info">
+                                <i class="bi bi-arrow-up me-1"></i>
+                                @(selectedLanguage == "Arabic" ? "مسجل" : "Registered")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="/cities" class="btn btn-outline-info btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        @(selectedLanguage == "Arabic" ? "عرض المدن" : "View Cities")
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Vouchers Card -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-dark bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-journal-text text-dark fs-1"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="card-title text-muted mb-1">
+                                @(selectedLanguage == "Arabic" ? "القيود اليومية" : "Journal Vouchers")
+                            </h6>
+                            <h3 class="mb-0 fw-bold text-dark">@jvsCount</h3>
+                            <small class="text-dark">
+                                <i class="bi bi-arrow-up me-1"></i>
+                                @(selectedLanguage == "Arabic" ? "هذا الشهر" : "This Month")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="/jv-management" class="btn btn-outline-dark btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>
+                        @(selectedLanguage == "Arabic" ? "عرض القيود" : "View Vouchers")
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>
+                        @(selectedLanguage == "Arabic" ? "إجراءات سريعة" : "Quick Actions")
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="/account-form" class="btn btn-primary w-100 p-3">
+                                <i class="bi bi-plus-circle fs-1 d-block mb-2"></i>
+                                @(selectedLanguage == "Arabic" ? "إضافة حساب جديد" : "Add New Account")
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/branch-form" class="btn btn-success w-100 p-3">
+                                <i class="bi bi-plus-circle fs-1 d-block mb-2"></i>
+                                @(selectedLanguage == "Arabic" ? "إضافة فرع جديد" : "Add New Branch")
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/jv-form" class="btn btn-dark w-100 p-3">
+                                <i class="bi bi-plus-circle fs-1 d-block mb-2"></i>
+                                @(selectedLanguage == "Arabic" ? "إنشاء قيد جديد" : "Create New Voucher")
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/subaccount-form" class="btn btn-warning w-100 p-3">
+                                <i class="bi bi-plus-circle fs-1 d-block mb-2"></i>
+                                @(selectedLanguage == "Arabic" ? "إضافة حساب فرعي" : "Add Sub Account")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Section -->
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        @(selectedLanguage == "Arabic" ? "آخر القيود اليومية" : "Recent Journal Vouchers")
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (recentJVs?.Any() == true)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>@(selectedLanguage == "Arabic" ? "رقم القيد" : "JV Number")</th>
+                                        <th>@(selectedLanguage == "Arabic" ? "التاريخ" : "Date")</th>
+                                        <th>@(selectedLanguage == "Arabic" ? "الوصف" : "Description")</th>
+                                        <th>@(selectedLanguage == "Arabic" ? "الفرع" : "Branch")</th>
+                                        <th class="text-center">@(selectedLanguage == "Arabic" ? "الإجراءات" : "Actions")</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var jv in recentJVs.Take(5))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <span class="badge bg-primary">@jv.JVNumber</span>
+                                            </td>
+                                            <td>@jv.JVDate.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <div class="text-truncate" style="max-width: 200px;" title="@jv.Description">
+                                                    @jv.Description
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @{
+                                                    var branch = branches?.FirstOrDefault(b => b.BranchID == jv.BranchID);
+                                                }
+                                                @if (branch != null)
+                                                {
+                                                    <span class="badge bg-secondary">
+                                                        @(selectedLanguage == "Arabic" ? branch.BranchNameAr : branch.BranchNameEn)
+                                                    </span>
+                                                }
+                                            </td>
+                                            <td class="text-center">
+                                                <a href="/jv-details/@jv.JVID" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-journal-text display-4 text-muted mb-3"></i>
+                            <p class="text-muted">
+                                @(selectedLanguage == "Arabic" ? "لا توجد قيود حديثة" : "No recent vouchers")
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>
+                        @(selectedLanguage == "Arabic" ? "إحصائيات سريعة" : "Quick Stats")
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>@(selectedLanguage == "Arabic" ? "الحسابات الفرعية" : "Sub Accounts")</span>
+                        <span class="badge bg-warning">@subAccountsCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>@(selectedLanguage == "Arabic" ? "تفاصيل القيود" : "JV Details")</span>
+                        <span class="badge bg-info">@jvDetailsCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>@(selectedLanguage == "Arabic" ? "أنواع القيود" : "JV Types")</span>
+                        <span class="badge bg-secondary">@jvTypesCount</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>@(selectedLanguage == "Arabic" ? "تفاصيل الحسابات الفرعية" : "Sub Account Details")</span>
+                        <span class="badge bg-danger">@subAccountsDetailCount</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string selectedLanguage = "Arabic";
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    
+    // Statistics
+    private int accountsCount = 0;
+    private int branchesCount = 0;
+    private int citiesCount = 0;
+    private int jvsCount = 0;
+    private int subAccountsCount = 0;
+    private int jvDetailsCount = 0;
+    private int jvTypesCount = 0;
+    private int subAccountsDetailCount = 0;
+    
+    // Data for recent activities
+    private List<JV> recentJVs = new();
+    private List<Branch> branches = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            // Load all data in parallel
+            var accountsTask = ApiService.GetAllAsync<Account>("Account");
+            var branchesTask = ApiService.GetAllAsync<Branch>("Branch");
+            var citiesTask = ApiService.GetAllAsync<City>("City");
+            var jvsTask = ApiService.GetAllAsync<JV>("JV");
+            var subAccountsTask = ApiService.GetAllAsync<SubAccount>("SubAccount");
+            var jvDetailsTask = ApiService.GetAllAsync<JVDetail>("JVDetail");
+            var jvTypesTask = ApiService.GetAllAsync<JVType>("JVType");
+            var subAccountsDetailTask = ApiService.GetAllAsync<SubAccounts_Detail>("SubAccountsDetail");
+
+            await Task.WhenAll(accountsTask, branchesTask, citiesTask, jvsTask, 
+                             subAccountsTask, jvDetailsTask, jvTypesTask, subAccountsDetailTask);
+
+            // Set counts
+            accountsCount = (await accountsTask).Count;
+            branchesCount = (await branchesTask).Count;
+            citiesCount = (await citiesTask).Count;
+            jvsCount = (await jvsTask).Count;
+            subAccountsCount = (await subAccountsTask).Count;
+            jvDetailsCount = (await jvDetailsTask).Count;
+            jvTypesCount = (await jvTypesTask).Count;
+            subAccountsDetailCount = (await subAccountsDetailTask).Count;
+
+            // Set data for recent activities
+            recentJVs = await jvsTask;
+            branches = await branchesTask;
+
+            // Sort recent JVs by date (newest first)
+            recentJVs = recentJVs.OrderByDescending(jv => jv.JVDate).ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = selectedLanguage == "Arabic"
+                ? $"خطأ في تحميل البيانات: {ex.Message}"
+                : $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ChangeLanguage(string language)
+    {
+        selectedLanguage = language;
+        StateHasChanged();
+    }
+} 

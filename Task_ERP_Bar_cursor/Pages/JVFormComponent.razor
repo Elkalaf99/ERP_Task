@@ -1,0 +1,255 @@
+﻿@page "/JVFormComponent"
+@using System.ComponentModel.DataAnnotations
+@using Task_ERP_Bar.Models
+@using Task_ERP_Bar.Services
+<header class="bg-primary text-white p-2 rounded">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <!-- Language Dropdown -->
+            <div class="me-3">
+                <select class="form-select form-select-sm" style="width: 120px;" @onchange="ChangeLanguage">
+                    <option value="English" selected>English</option>
+                    <option value="Arabic">Arabic</option>
+                </select>
+            </div>
+
+            <!-- Branch Name -->
+            <div class="me-3">
+                <span>@branchName</span>
+            </div>
+
+            <!-- Welcome User -->
+            <div class="me-3">
+                <span>Welcome User: <strong>@userName</strong></span>
+            </div>
+
+            <!-- Logout Button -->
+            <div>
+                <button class="btn btn-sm btn-outline-light" @onclick="Logout">Logout</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+
+<div class="text-white p-2 d-flex gap-2 align-items-center">
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty"></button>
+    </div>
+}
+
+    <!-- الأزرار الأساسية -->
+    <button class="btn btn-primary btn-sm w-auto text-warning" @onclick="NavigateToAdd">
+        New
+    </button>
+    <button class="btn btn-primary btn-sm w-auto text-warning" @onclick="NavigateToUpdate">
+        Update
+    </button>
+    <button class="btn btn-primary btn-sm w-auto text-warning" @onclick="DeleteSelectedJV" disabled="@isLoading">
+        @if (isLoading)
+        {
+            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+        }
+        Delete
+    </button>
+    <button class="btn btn-primary btn-sm w-auto text-warning" @onclick="PrintJV">Print</button>
+
+    <!-- سهم لليسار -->
+    <button class="btn btn btn-outline-info btn-primary btn-sm">
+        <i class="fa-solid fa-caret-right fa-xl" style="color: #ffffff;"></i>
+    </button>
+
+    <!-- حقل البحث + أيقونة -->
+    <div class="input-group" style="width: 200px;">
+        <input type="text" class="form-control form-control-sm" placeholder="Search..." value="@searchTerm" @onchange="OnSearchChanged" />
+        <span class="input-group-text bg-primary">
+            <i class="fa-solid fa-magnifying-glass fa-sm" style="color: #FFD43B;"></i>
+        </span>
+    </div>
+
+    <!-- سهم لليمين -->
+    <button class="btn btn btn-outline-info btn-primary btn-sm">
+        <i class="fa-solid fa-caret-left fa-xl" style="color: #ffffff;"></i>
+    </button>
+
+    <!-- زر JV ياخد باقي العرض -->
+    <button class="btn btn-primary btn-sm flex-grow-1 text-warning">JV</button>
+    <button class="btn btn-primary btn-sm w-auto text-warning"><i class="fa-solid fa-x" style="color: #FFD43B;"></i></button>
+
+</div>
+
+
+
+<div class="container mt-3">
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <label for="fromDate" class="form-label me-2 mb-0 text-info" style="min-width: 90px;">From Date</label>
+                <input type="date" class="form-control" id="fromDate" @onchange="OnFromDateChanged" />
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <label for="toDate" class="form-label me-2 mb-0 text-info" style="min-width: 90px;">To Date</label>
+                <input type="date" class="form-control" id="toDate" @onchange="OnToDateChanged" />
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <label for="transType" class="form-label me-2 mb-0 text-info" style="min-width: 130px;">Transaction Type</label>
+                <select class="form-select" id="transType" @onchange="OnJVTypeChanged">
+                    <option value="">All Types</option>
+                    @if (jvTypes != null)
+                    {
+                        @foreach (var jvType in jvTypes)
+                        {
+                            <option value="@jvType.JVTypeID">@(selectedLanguage == "Arabic" ? jvType.JVTypeNameAr : jvType.JVTypeNameEn)</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ClearFilters">
+                    Clear Filters
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+<div class="bg-light p-3 mt-3" style="min-height: 400px; border-radius: 5px; border: 1px solid #dee2e6;">
+
+    @if (isLoading)
+    {
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">جاري تحميل البيانات...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="text-center p-4">
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @errorMessage
+            </div>
+            <button class="btn btn-primary" @onclick="LoadJVsAsync">
+                <i class="fas fa-redo me-1"></i>
+                إعادة المحاولة
+            </button>
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered mb-0 table-hover">
+            <thead class="table-primary">
+                <tr>
+                    <th style="width: 80px;">رقم القيد</th>
+                    <th style="width: 100px;">التاريخ</th>
+                    <th style="width: 120px;">النوع</th>
+                    <th style="width: 120px;">رقم الإيصال</th>
+                    <th style="width: 120px;">إجمالي المدين</th>
+                    <th style="width: 120px;">إجمالي الدائن</th>
+                    <th style="width: 200px;">الملاحظات</th>
+                    <th style="width: 80px;">الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (filteredJVs != null && filteredJVs.Any())
+                {
+                    @foreach (var jv in filteredJVs)
+                    {
+                        <tr class="@GetRowClass(jv)" @onclick="@(() => SelectJV(jv))" style="cursor: pointer;">
+                            <td><strong>@jv.JVNumber</strong></td>
+                            <td>@jv.JVDate.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <span class="badge bg-info">@GetJVTypeName(jv.JVTypeID)</span>
+                            </td>
+                            <td>@(string.IsNullOrEmpty(jv.ReceiptNo) ? "-" : jv.ReceiptNo)</td>
+                            <td class="text-end">
+                                <span class="text-success fw-bold">@GetFormattedAmount(jv.TotalDebit)</span>
+                            </td>
+                            <td class="text-end">
+                                <span class="text-danger fw-bold">@GetFormattedAmount(jv.TotalCredit)</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(jv.Notes))
+                                {
+                                    <span title="@jv.Notes">
+                                        @(jv.Notes.Length > 50 ? jv.Notes.Substring(0, 50) + "..." : jv.Notes)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (Math.Abs(jv.TotalDebit - jv.TotalCredit) < 0.01m)
+                                {
+                                    <span class="badge bg-success">متوازن</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">غير متوازن</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <br />
+                            لا توجد قيود يومية
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+
+    
+
+</div>
+<div class="row mb-4">
+    <div class="col-md-4 d-flex align-items-center gap-2">
+        <label class="mb-0"><strong>Total Debit:</strong></label>
+        <div class="border rounded bg-white px-3 shadow-sm text-center" style="min-width: 100px;">
+            @(filteredJVs?.Sum(j => j.TotalDebit) ?? 0).ToString("C")
+        </div>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-center gap-2">
+        <label class="mb-0"><strong>Total Credit:</strong></label>
+        <div class="border rounded bg-white px-3  shadow-sm text-center" style="min-width: 100px;">
+            @(filteredJVs?.Sum(j => j.TotalCredit) ?? 0).ToString("C")
+        </div>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-center gap-2">
+        <label class="mb-0"><strong>Diff:</strong></label>
+        <div class="border rounded bg-white px-3 shadow-sm text-center" style="min-width: 100px;">
+            @((filteredJVs?.Sum(j => j.TotalDebit) ?? 0) - (filteredJVs?.Sum(j => j.TotalCredit) ?? 0)).ToString("C")
+        </div>
+    </div>
+</div>
+

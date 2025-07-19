@@ -1,0 +1,118 @@
+﻿@page "/"
+
+<PageTitle>ERP System - Home</PageTitle>
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="jumbotron">
+                <h1 class="display-4">Welcome to ERP System</h1>
+                <p class="lead">Enterprise Resource Planning System for Financial Management</p>
+                <hr class="my-4">
+                <p>This system provides comprehensive financial management capabilities including:</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">📊 Account Management</h5>
+                    <p class="card-text">Manage chart of accounts, create and maintain financial accounts with proper categorization.</p>
+                    <ul class="list-unstyled">
+                        <li>• Account creation and maintenance</li>
+                        <li>• Account hierarchy management</li>
+                        <li>• Account type classification</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">🏢 Branch Management</h5>
+                    <p class="card-text">Manage multiple business locations and branches with centralized control.</p>
+                    <ul class="list-unstyled">
+                        <li>• Branch creation and setup</li>
+                        <li>• Multi-location support</li>
+                        <li>• Branch-specific configurations</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">🏙️ City Management</h5>
+                    <p class="card-text">Organize business operations by geographical locations and cities.</p>
+                    <ul class="list-unstyled">
+                        <li>• City-based organization</li>
+                        <li>• Geographic data management</li>
+                        <li>• Location-based reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">📋 Sub-Account Management</h5>
+                    <p class="card-text">Detailed account breakdown with hierarchical structure and client management.</p>
+                    <ul class="list-unstyled">
+                        <li>• Sub-account creation</li>
+                        <li>• Client association</li>
+                        <li>• Level-based organization</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">📝 Journal Vouchers</h5>
+                    <p class="card-text">Create and manage journal entries with proper double-entry bookkeeping.</p>
+                    <ul class="list-unstyled">
+                        <li>• Journal voucher creation</li>
+                        <li>• Debit/Credit balancing</li>
+                        <li>• Transaction history</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">🔧 System Features</h5>
+                    <p class="card-text">Advanced features for comprehensive financial management.</p>
+                    <ul class="list-unstyled">
+                        <li>• Multi-language support</li>
+                        <li>• Real-time data synchronization</li>
+                        <li>• Comprehensive reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6>🚀 Getting Started</h6>
+                <p class="mb-0">Use the navigation menu to access different modules. The system is connected to the API at <strong>@(Configuration["ApiBaseUrl"] ?? "https://localhost:7000/")</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private IConfiguration Configuration { get; set; } = default!;
+}

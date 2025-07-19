@@ -1,0 +1,415 @@
+@page "/JVDetailAddComponent"
+@using System.ComponentModel.DataAnnotations
+@using Task_ERP_Bar.Models
+@using Task_ERP_Bar.Services
+
+<PageTitle>Add JV Details - ERP System</PageTitle>
+
+<!-- Header Section -->
+<header class="bg-success text-white p-3 rounded shadow-sm">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex align-items-center gap-3">
+                <h4 class="mb-0">
+                    <i class="bi bi-list-ul me-2"></i>
+                    @(selectedLanguage == "Arabic" ? "إضافة تفاصيل قيد يومية" : "Add Journal Voucher Details")
+                </h4>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- Language Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-globe me-1"></i>
+                        @selectedLanguage
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("English"))">English</a></li>
+                        <li><a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("Arabic"))">العربية</a></li>
+                    </ul>
+                </div>
+
+                <!-- Branch Info -->
+                <span class="badge bg-light text-dark">
+                    <i class="bi bi-building me-1"></i>
+                    @branchName
+                </span>
+
+                <!-- User Info -->
+                <span class="badge bg-info">
+                    <i class="bi bi-person me-1"></i>
+                    @userName
+                </span>
+
+                <!-- Logout Button -->
+                <button class="btn btn-outline-light btn-sm" @onclick="Logout" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Alert Messages -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        @successMessage
+        <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Action Buttons -->
+<div class="bg-light p-3 border-bottom">
+    <div class="container-fluid">
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-success" @onclick="SaveAsync" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                }
+                <i class="bi bi-save me-1"></i>
+                @(selectedLanguage == "Arabic" ? "حفظ التفاصيل" : "Save Details")
+            </button>
+            
+            <button class="btn btn-primary" @onclick="SaveAndCloseAsync" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                }
+                <i class="bi bi-save-check me-1"></i>
+                @(selectedLanguage == "Arabic" ? "حفظ وإغلاق" : "Save & Close")
+            </button>
+            
+            <button class="btn btn-secondary" @onclick="Cancel" disabled="@isLoading">
+                <i class="bi bi-x-circle me-1"></i>
+                @(selectedLanguage == "Arabic" ? "إلغاء" : "Cancel")
+            </button>
+            
+            <button class="btn btn-outline-primary" @onclick="Refresh" disabled="@isLoading">
+                <i class="bi bi-arrow-clockwise me-1"></i>
+                @(selectedLanguage == "Arabic" ? "تحديث" : "Refresh")
+            </button>
+            
+            <div class="ms-auto">
+                <span class="badge bg-success fs-6">
+                    <i class="bi bi-list-ul me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "تفاصيل القيد" : "JV Details")
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Form -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- JV Selection -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search me-2"></i>
+                        @(selectedLanguage == "Arabic" ? "اختيار القيد" : "Select Journal Voucher")
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="jvIdInput" class="form-label fw-bold">
+                                <i class="bi bi-hash me-1"></i>
+                                @(selectedLanguage == "Arabic" ? "رقم القيد" : "JV ID")
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   class="form-control @(IsJVIdValid ? "" : "is-invalid")" 
+                                   id="jvIdInput" 
+                                   @bind="selectedJVId" 
+                                   placeholder="@(selectedLanguage == "Arabic" ? "أدخل رقم القيد" : "Enter JV ID")"
+                                   min="1"
+                                   required />
+                            @if (!IsJVIdValid)
+                            {
+                                <div class="invalid-feedback">
+                                    @(selectedLanguage == "Arabic" ? "رقم القيد مطلوب" : "JV ID is required")
+                                </div>
+                            }
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <button class="btn btn-info w-100" @onclick="LoadJVDetails" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <i class="bi bi-search me-1"></i>
+                                @(selectedLanguage == "Arabic" ? "تحميل تفاصيل القيد" : "Load JV Details")
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            @if (selectedJV != null)
+                            {
+                                <div class="alert alert-info mb-0">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <div>
+                                            <strong>@(selectedLanguage == "Arabic" ? "معلومات القيد:" : "JV Info:")</strong><br/>
+                                            <small>
+                                                @selectedJV.JVNumber - @selectedJV.JVDate.ToString("dd/MM/yyyy")<br/>
+                                                @(selectedLanguage == "Arabic" ? "الإجمالي:" : "Total:") @selectedJV.TotalDebit.ToString("C") / @selectedJV.TotalCredit.ToString("C")
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JV Details Table -->
+        @if (selectedJV != null)
+        {
+            <div class="col-12 mt-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table me-2"></i>
+                            @(selectedLanguage == "Arabic" ? "تفاصيل القيد" : "Voucher Details")
+                        </h5>
+                        <button class="btn btn-light btn-sm" @onclick="AddNewDetailRow">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            @(selectedLanguage == "Arabic" ? "إضافة صف" : "Add Row")
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover mb-0">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th style="width: 50px;" class="text-center">#</th>
+                                        <th style="width: 200px;">
+                                            <i class="bi bi-bank me-1"></i>
+                                            @(selectedLanguage == "Arabic" ? "الحساب" : "Account")
+                                            <span class="text-danger">*</span>
+                                        </th>
+                                        <th style="width: 200px;">
+                                            <i class="bi bi-diagram-2 me-1"></i>
+                                            @(selectedLanguage == "Arabic" ? "الحساب الفرعي" : "Sub Account")
+                                        </th>
+                                        <th style="width: 120px;">
+                                            <i class="bi bi-arrow-down-circle me-1"></i>
+                                            @(selectedLanguage == "Arabic" ? "مدين" : "Debit")
+                                        </th>
+                                        <th style="width: 120px;">
+                                            <i class="bi bi-arrow-up-circle me-1"></i>
+                                            @(selectedLanguage == "Arabic" ? "دائن" : "Credit")
+                                        </th>
+                                        <th style="width: 100px;" class="text-center">
+                                            <i class="bi bi-check2-square me-1"></i>
+                                            @(selectedLanguage == "Arabic" ? "موثق" : "Documented")
+                                        </th>
+                                        <th style="width: 150px;">
+                                            <i class="bi bi-chat-text me-1"></i>
+                                            @(selectedLanguage == "Arabic" ? "ملاحظات" : "Notes")
+                                        </th>
+                                        <th style="width: 60px;" class="text-center">
+                                            <i class="bi bi-trash me-1"></i>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (jvDetails != null)
+                                    {
+                                        @for (int i = 0; i < jvDetails.Count; i++)
+                                        {
+                                            var detail = jvDetails[i];
+                                            var index = i;
+                                            <tr class="@(IsDetailRowValid(index) ? "" : "table-warning")">
+                                                <td class="text-center fw-bold">@(index + 1)</td>
+                                                <td>
+                                                    <select class="form-select @(IsAccountValid(index) ? "" : "is-invalid")" 
+                                                            value="@detail.AccountID" 
+                                                            @onchange="e => OnAccountChanged(index, e.Value!)"
+                                                            required>
+                                                        <option value="0">@(selectedLanguage == "Arabic" ? "اختر الحساب" : "Select Account")</option>
+                                                        @if (accounts != null)
+                                                        {
+                                                            @foreach (var account in accounts)
+                                                            {
+                                                                <option value="@account.AccountID">
+                                                                    @GetAccountDisplayName(account)
+                                                                </option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                    @if (!IsAccountValid(index))
+                                                    {
+                                                        <div class="invalid-feedback">
+                                                            @(selectedLanguage == "Arabic" ? "الحساب مطلوب" : "Account is required")
+                                                        </div>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <select class="form-select" 
+                                                            value="@detail.SubAccountID" 
+                                                            @onchange="e => OnSubAccountChanged(index, e.Value!)">
+                                                        <option value="">@(selectedLanguage == "Arabic" ? "اختر الحساب الفرعي" : "Select Sub Account")</option>
+                                                        @if (subAccounts != null)
+                                                        {
+                                                            @foreach (var subAccount in subAccounts)
+                                                            {
+                                                                <option value="@subAccount.SubAccountID">
+                                                                    @GetSubAccountDisplayName(subAccount)
+                                                                </option>
+                                                            }
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" 
+                                                           class="form-control @(IsAmountValid(index) ? "" : "is-invalid")" 
+                                                           value="@detail.Debit"
+                                                           @onchange="e => OnDebitChanged(index, e.Value!)"
+                                                           step="0.01"
+                                                           min="0"
+                                                           placeholder="0.00" />
+                                                    @if (!IsAmountValid(index))
+                                                    {
+                                                        <div class="invalid-feedback">
+                                                            @(selectedLanguage == "Arabic" ? "أدخل إما مدين أو دائن" : "Enter either debit or credit")
+                                                        </div>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <input type="number" 
+                                                           class="form-control @(IsAmountValid(index) ? "" : "is-invalid")" 
+                                                           value="@detail.Credit"
+                                                           @onchange="e => OnCreditChanged(index, e.Value!)"
+                                                           step="0.01"
+                                                           min="0"
+                                                           placeholder="0.00" />
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="form-check d-flex justify-content-center">
+                                                        <input type="checkbox" 
+                                                               class="form-check-input" 
+                                                               @bind="detail.IsDocumented"
+                                                               id="documented_@index" />
+                                                        <label class="form-check-label" for="documented_@index"></label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <input type="text" 
+                                                           class="form-control" 
+                                                           @bind="detail.Notes"
+                                                           placeholder="@(selectedLanguage == "Arabic" ? "ملاحظات..." : "Notes...")" />
+                                                </td>
+                                                <td class="text-center">
+                                                    <button class="btn btn-outline-danger btn-sm" 
+                                                            @onclick="@(() => RemoveDetailRow(index))" 
+                                                            disabled="@(jvDetails.Count <= 1)"
+                                                            title="@(selectedLanguage == "Arabic" ? "حذف الصف" : "Delete Row")">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Section -->
+            <div class="col-12 mt-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calculator me-2"></i>
+                            @(selectedLanguage == "Arabic" ? "ملخص القيد" : "Voucher Summary")
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <label class="form-label fw-bold mb-0">
+                                        <i class="bi bi-arrow-down-circle text-success me-2"></i>
+                                        @(selectedLanguage == "Arabic" ? "إجمالي المدين:" : "Total Debit:")
+                                    </label>
+                                    <div class="border rounded bg-success bg-opacity-10 px-3 py-2 shadow-sm text-center fw-bold" style="min-width: 120px;">
+                                        @TotalDebit.ToString("C")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <label class="form-label fw-bold mb-0">
+                                        <i class="bi bi-arrow-up-circle text-danger me-2"></i>
+                                        @(selectedLanguage == "Arabic" ? "إجمالي الدائن:" : "Total Credit:")
+                                    </label>
+                                    <div class="border rounded bg-danger bg-opacity-10 px-3 py-2 shadow-sm text-center fw-bold" style="min-width: 120px;">
+                                        @TotalCredit.ToString("C")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    <label class="form-label fw-bold mb-0">
+                                        <i class="bi bi-arrow-left-right text-primary me-2"></i>
+                                        @(selectedLanguage == "Arabic" ? "الفرق:" : "Difference:")
+                                    </label>
+                                    <div class="border rounded px-3 py-2 shadow-sm text-center fw-bold @(Math.Abs(Difference) > 0.01m ? "bg-danger bg-opacity-10 text-danger" : "bg-success bg-opacity-10 text-success")" style="min-width: 120px;">
+                                        @Difference.ToString("C")
+                                        @if (Math.Abs(Difference) <= 0.01m)
+                                        {
+                                            <i class="bi bi-check-circle ms-1"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-exclamation-triangle ms-1"></i>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Empty State -->
+            <div class="col-12 mt-4">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-search display-1 text-muted mb-3"></i>
+                        <h4 class="text-muted">
+                            @(selectedLanguage == "Arabic" ? "اختر قيد يومية لإضافة التفاصيل" : "Select a Journal Voucher to Add Details")
+                        </h4>
+                        <p class="text-muted">
+                            @(selectedLanguage == "Arabic" ? "أدخل رقم القيد واضغط على زر التحميل" : "Enter a JV ID and click the load button")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div> 

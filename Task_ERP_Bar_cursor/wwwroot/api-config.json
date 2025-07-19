@@ -1,0 +1,61 @@
+{
+  "ApiEndpoints": {
+    "BaseUrl": "https://localhost:7240/",
+    "JVs": {
+      "GetAll": "api/jv",
+      "GetById": "api/jv/{id}",
+      "Create": "api/jv",
+      "Update": "api/jv/{id}",
+      "Delete": "api/jv/{id}",
+      "GenerateNumber": "api/jv/generate-number"
+    },
+    "Accounts": {
+      "GetAll": "api/account",
+      "GetById": "api/account/{id}",
+      "Create": "api/account",
+      "Update": "api/account/{id}",
+      "Delete": "api/account/{id}"
+    },
+    "SubAccounts": {
+      "GetAll": "api/subaccount",
+      "GetById": "api/subaccount/{id}",
+      "Create": "api/subaccount",
+      "Update": "api/subaccount/{id}",
+      "Delete": "api/subaccount/{id}"
+    },
+    "JVTypes": {
+      "GetAll": "api/jvtype",
+      "GetById": "api/jvtype/{id}",
+      "Create": "api/jvtype",
+      "Update": "api/jvtype/{id}",
+      "Delete": "api/jvtype/{id}"
+    },
+    "Branches": {
+      "GetAll": "api/branch",
+      "GetById": "api/branch/{id}",
+      "Create": "api/branch",
+      "Update": "api/branch/{id}",
+      "Delete": "api/branch/{id}"
+    },
+    "JVDetails": {
+      "GetAll": "api/jvdetail",
+      "GetById": "api/jvdetail/{id}",
+      "GetByJVId": "api/jvdetail/jv/{jvId}",
+      "Create": "api/jvdetail",
+      "Update": "api/jvdetail/{id}",
+      "Delete": "api/jvdetail/{id}"
+    }
+  },
+  "DataFormats": {
+    "DateFormat": "yyyy-MM-ddTHH:mm:ss",
+    "DisplayDateFormat": "dd/MM/yyyy",
+    "CurrencyFormat": "C",
+    "DecimalPlaces": 2
+  },
+  "Validation": {
+    "MaxJVNumberLength": 50,
+    "MaxNotesLength": 1000,
+    "MaxReceiptNumberLength": 50,
+    "MinDebitCreditDifference": 0.01
+  }
+}

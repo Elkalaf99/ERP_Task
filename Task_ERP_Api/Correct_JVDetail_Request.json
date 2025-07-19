@@ -1,0 +1,10 @@
+{
+  "jVID": 1,
+  "accountID": 4001,
+  "subAccountID": null,
+  "debit": null,
+  "credit": 10000.0,
+  "isDocumented": true,
+  "notes": "إيراد نقدي",
+  "branchID": 1
+}

@@ -1,0 +1,444 @@
+@page "/jv-management"
+@using Task_ERP_Bar.Models
+@using Task_ERP_Bar.Services
+@inject IApiService ApiService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>إدارة القيود اليومية - ERP System</PageTitle>
+
+<!-- Header Section -->
+<header class="bg-dark text-white p-3 rounded shadow-sm">
+    <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex align-items-center gap-3">
+                <h4 class="mb-0">
+                    <i class="bi bi-journal-text me-2"></i>
+                    @(selectedLanguage == "Arabic" ? "إدارة القيود اليومية" : "Journal Vouchers Management")
+                </h4>
+            </div>
+            
+            <div class="d-flex align-items-center gap-3">
+                <!-- Language Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-globe me-1"></i>
+                        @selectedLanguage
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("English"))">English</a></li>
+                        <li><a class="dropdown-item" href="#" @onclick="@(() => ChangeLanguage("Arabic"))">العربية</a></li>
+                    </ul>
+                </div>
+
+                <!-- Add New Button -->
+                <button class="btn btn-light" @onclick="AddNewJV">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "إضافة قيد جديد" : "Add New JV")
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Alert Messages -->
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = string.Empty" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        @successMessage
+        <button type="button" class="btn-close" @onclick="() => successMessage = string.Empty" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Search and Filter Section -->
+<div class="bg-light p-3 border-bottom">
+    <div class="container-fluid">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-search me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "البحث" : "Search")
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       @bind="searchTerm" 
+                       @bind:event="oninput"
+                       placeholder="@(selectedLanguage == "Arabic" ? "ابحث في القيود..." : "Search vouchers...")" />
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-building me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "الفرع" : "Branch")
+                </label>
+                <select class="form-select" @bind="selectedBranchId">
+                    <option value="0">@(selectedLanguage == "Arabic" ? "جميع الفروع" : "All Branches")</option>
+                    @if (branches != null)
+                    {
+                        @foreach (var branch in branches)
+                        {
+                            <option value="@branch.BranchID">
+                                @(selectedLanguage == "Arabic" ? branch.BranchNameAr : branch.BranchNameEn)
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-calendar me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "من تاريخ" : "From Date")
+                </label>
+                <input type="date" class="form-control" @bind="fromDate" />
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label fw-bold">
+                    <i class="bi bi-calendar me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "إلى تاريخ" : "To Date")
+                </label>
+                <input type="date" class="form-control" @bind="toDate" />
+            </div>
+            
+            <div class="col-md-3">
+                <button class="btn btn-dark w-100" @onclick="LoadJVs" disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    }
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "تحديث" : "Refresh")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container-fluid mt-4">
+    @if (isLoading && jvs == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-dark" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">@(selectedLanguage == "Arabic" ? "جاري تحميل القيود..." : "Loading vouchers...")</p>
+        </div>
+    }
+    else if (filteredJVs?.Any() == true)
+    {
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-table me-2"></i>
+                        @(selectedLanguage == "Arabic" ? "قائمة القيود اليومية" : "Journal Vouchers List")
+                    </h5>
+                    <span class="badge bg-light text-dark">
+                        @filteredJVs.Count @(selectedLanguage == "Arabic" ? "قيد" : "vouchers")
+                    </span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 80px;" class="text-center">#</th>
+                                <th style="width: 120px;">
+                                    <i class="bi bi-hash me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "رقم القيد" : "JV Number")
+                                </th>
+                                <th style="width: 120px;">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "التاريخ" : "Date")
+                                </th>
+                                <th style="width: 200px;">
+                                    <i class="bi bi-text-paragraph me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "الوصف" : "Description")
+                                </th>
+                                <th style="width: 120px;">
+                                    <i class="bi bi-building me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "الفرع" : "Branch")
+                                </th>
+                                <th style="width: 120px;">
+                                    <i class="bi bi-tag me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "نوع القيد" : "JV Type")
+                                </th>
+                                <th style="width: 100px;" class="text-center">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "الحالة" : "Status")
+                                </th>
+                                <th style="width: 150px;" class="text-center">
+                                    <i class="bi bi-gear me-1"></i>
+                                    @(selectedLanguage == "Arabic" ? "الإجراءات" : "Actions")
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var jv in filteredJVs)
+                            {
+                                <tr>
+                                    <td class="text-center fw-bold">@jv.JVID</td>
+                                    <td>
+                                        <span class="badge bg-primary">@jv.JVNumber</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">@jv.JVDate.ToString("dd/MM/yyyy")</span>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;" title="@jv.Description">
+                                            @jv.Description
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var branch = branches?.FirstOrDefault(b => b.BranchID == jv.BranchID);
+                                        }
+                                        @if (branch != null)
+                                        {
+                                            <span class="badge bg-secondary">
+                                                @(selectedLanguage == "Arabic" ? branch.BranchNameAr : branch.BranchNameEn)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            var jvType = jvTypes?.FirstOrDefault(t => t.JVTypeID == jv.JVTypeID);
+                                        }
+                                        @if (jvType != null)
+                                        {
+                                            <span class="badge bg-info">
+                                                @(selectedLanguage == "Arabic" ? jvType.JVTypeNameAr : jvType.JVTypeNameEn)
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (jv.IsActive)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                @(selectedLanguage == "Arabic" ? "نشط" : "Active")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>
+                                                @(selectedLanguage == "Arabic" ? "غير نشط" : "Inactive")
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-dark btn-sm" 
+                                                    @onclick="() => EditJV(jv)"
+                                                    title="@(selectedLanguage == "Arabic" ? "تعديل" : "Edit")">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    @onclick="() => ViewJV(jv)"
+                                                    title="@(selectedLanguage == "Arabic" ? "عرض" : "View")">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-warning btn-sm" 
+                                                    @onclick="() => AddJVDetail(jv)"
+                                                    title="@(selectedLanguage == "Arabic" ? "إضافة تفاصيل" : "Add Details")">
+                                                <i class="bi bi-plus-circle"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    @onclick="() => DeleteJV(jv)"
+                                                    title="@(selectedLanguage == "Arabic" ? "حذف" : "Delete")">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="bi bi-journal-text display-1 text-muted mb-3"></i>
+                <h4 class="text-muted">
+                    @(selectedLanguage == "Arabic" ? "لا توجد قيود" : "No Journal Vouchers Found")
+                </h4>
+                <p class="text-muted">
+                    @(selectedLanguage == "Arabic" ? "لم يتم العثور على قيود تطابق معايير البحث" : "No vouchers match your search criteria")
+                </p>
+                <button class="btn btn-dark" @onclick="AddNewJV">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    @(selectedLanguage == "Arabic" ? "إضافة أول قيد" : "Add First Voucher")
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<JV> jvs = new();
+    private List<Branch> branches = new();
+    private List<JVType> jvTypes = new();
+    private string selectedLanguage = "Arabic";
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    
+    // Filter properties
+    private string searchTerm = string.Empty;
+    private int selectedBranchId = 0;
+    private DateTime? fromDate = null;
+    private DateTime? toDate = null;
+    
+    // Computed properties
+    private List<JV> filteredJVs => jvs
+        .Where(jv => string.IsNullOrEmpty(searchTerm) || 
+                   jv.JVNumber.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+                   jv.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+        .Where(jv => selectedBranchId == 0 || jv.BranchID == selectedBranchId)
+        .Where(jv => !fromDate.HasValue || jv.JVDate >= fromDate.Value)
+        .Where(jv => !toDate.HasValue || jv.JVDate <= toDate.Value)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            StateHasChanged();
+
+            // Load data in parallel
+            var jvsTask = ApiService.GetAllAsync<JV>("JV");
+            var branchesTask = ApiService.GetAllAsync<Branch>("Branch");
+            var jvTypesTask = ApiService.GetAllAsync<JVType>("JVType");
+
+            await Task.WhenAll(jvsTask, branchesTask, jvTypesTask);
+
+            jvs = await jvsTask;
+            branches = await branchesTask;
+            jvTypes = await jvTypesTask;
+
+            successMessage = selectedLanguage == "Arabic" 
+                ? $"تم تحميل {jvs.Count} قيد و {branches.Count} فرع و {jvTypes.Count} نوع قيد"
+                : $"Loaded {jvs.Count} vouchers, {branches.Count} branches, and {jvTypes.Count} voucher types";
+        }
+        catch (Exception ex)
+        {
+            errorMessage = selectedLanguage == "Arabic"
+                ? $"خطأ في تحميل البيانات: {ex.Message}"
+                : $"Error loading data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadJVs()
+    {
+        await LoadData();
+    }
+
+    private void AddNewJV()
+    {
+        Navigation.NavigateTo("/jv-form");
+    }
+
+    private void EditJV(JV jv)
+    {
+        Navigation.NavigateTo($"/jv-form/{jv.JVID}");
+    }
+
+    private void ViewJV(JV jv)
+    {
+        Navigation.NavigateTo($"/jv-details/{jv.JVID}");
+    }
+
+    private void AddJVDetail(JV jv)
+    {
+        Navigation.NavigateTo($"/jv-detail-form/{jv.JVID}");
+    }
+
+    private async Task DeleteJV(JV jv)
+    {
+        try
+        {
+            var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+                selectedLanguage == "Arabic"
+                    ? $"هل أنت متأكد من حذف القيد '{jv.JVNumber}'؟"
+                    : $"Are you sure you want to delete voucher '{jv.JVNumber}'?");
+
+            if (confirmed)
+            {
+                isLoading = true;
+                StateHasChanged();
+
+                var success = await ApiService.DeleteAsync("JV", jv.JVID);
+                
+                if (success)
+                {
+                    await LoadJVs();
+                    successMessage = selectedLanguage == "Arabic"
+                        ? "تم حذف القيد بنجاح"
+                        : "Voucher deleted successfully";
+                }
+                else
+                {
+                    errorMessage = selectedLanguage == "Arabic"
+                        ? "فشل في حذف القيد"
+                        : "Failed to delete voucher";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = selectedLanguage == "Arabic"
+                ? $"خطأ في حذف القيد: {ex.Message}"
+                : $"Error deleting voucher: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ChangeLanguage(string language)
+    {
+        selectedLanguage = language;
+        StateHasChanged();
+    }
+} 

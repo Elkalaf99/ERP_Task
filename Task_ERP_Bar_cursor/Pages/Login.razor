@@ -1,0 +1,32 @@
+@page "/login"
+
+<div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
+    <div class="card shadow p-4" style="min-width: 350px;">
+        <h3 class="text-center mb-4">Login</h3>
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
+        <EditForm Model="this" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="Username" />
+                <ValidationMessage For="() => Username" />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="Password" />
+                <ValidationMessage For="() => Password" />
+            </div>
+            <button class="btn btn-primary w-100" type="submit" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Login
+            </button>
+        </EditForm>
+    </div>
+</div> 

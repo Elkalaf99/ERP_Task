@@ -1,0 +1,92 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">ERP System</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        
+        <div class="nav-item px-3">
+            <div class="nav-link">
+                <span class="bi bi-journal-text-nav-menu" aria-hidden="true"></span> Journal Vouchers
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="JVFormComponent">
+                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> JV
+                </NavLink>
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="JVAddFormComponent">
+                    <span class="bi bi-plus-circle-fill-nav-menu" aria-hidden="true"></span> Add JV
+                </NavLink>
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="JVDetailAddComponent">
+                    <span class="bi bi-list-ul-nav-menu" aria-hidden="true"></span> Add JV Detail
+                </NavLink>
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="JVUpdateFormComponent">
+                    <span class="bi bi-pencil-square-nav-menu" aria-hidden="true"></span> Update JV
+                </NavLink>
+            </div>
+        </div>
+
+        <div class="nav-item px-3">
+            <div class="nav-link">
+                <span class="bi bi-building-nav-menu" aria-hidden="true"></span> Master Data
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="accounts">
+                    <span class="bi bi-cash-stack-nav-menu" aria-hidden="true"></span> Accounts
+                </NavLink>
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="branches">
+                    <span class="bi bi-geo-alt-fill-nav-menu" aria-hidden="true"></span> Branches
+                </NavLink>
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="cities">
+                    <span class="bi bi-building-fill-nav-menu" aria-hidden="true"></span> Cities
+                </NavLink>
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="subaccounts">
+                    <span class="bi bi-diagram-3-fill-nav-menu" aria-hidden="true"></span> Sub-Accounts
+                </NavLink>
+            </div>
+        </div>
+
+        <div class="nav-item px-3">
+            <div class="nav-link">
+                <span class="bi bi-gear-fill-nav-menu" aria-hidden="true"></span> System
+            </div>
+            <div class="nav-item px-4">
+                <NavLink class="nav-link" href="login">
+                    <span class="bi bi-person-circle-nav-menu" aria-hidden="true"></span> Login
+                </NavLink>
+            </div>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

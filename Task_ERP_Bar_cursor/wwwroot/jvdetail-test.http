@@ -1,0 +1,92 @@
+# 🎯 JVDetail Endpoint Test File
+# Base URL: https://localhost:7240/
+
+### Test JVDetail Endpoint - User Format
+POST https://localhost:7240/api/JVDetail
+Content-Type: application/json
+Accept: application/json
+
+{
+  "jVID": 1,
+  "accountID": 4001,
+  "subAccountID": null,
+  "debit": null,
+  "credit": 10000.0,
+  "isDocumented": true,
+  "notes": "إيراد نقدي",
+  "branchID": 1
+}
+
+### Test JVDetail Endpoint - Debit Entry
+POST https://localhost:7240/api/JVDetail
+Content-Type: application/json
+Accept: application/json
+
+{
+  "jVID": 1,
+  "accountID": 3002,
+  "subAccountID": 2003,
+  "debit": 10000.0,
+  "credit": null,
+  "isDocumented": true,
+  "notes": "مدين نقدي",
+  "branchID": 1
+}
+
+### Test JVDetail Endpoint - Credit Entry
+POST https://localhost:7240/api/JVDetail
+Content-Type: application/json
+Accept: application/json
+
+{
+  "jVID": 1,
+  "accountID": 4001,
+  "subAccountID": null,
+  "debit": null,
+  "credit": 5000.0,
+  "isDocumented": false,
+  "notes": "دائن إيراد",
+  "branchID": 1
+}
+
+### Test JVDetail Endpoint - Both Debit and Credit (Should Fail)
+POST https://localhost:7240/api/JVDetail
+Content-Type: application/json
+Accept: application/json
+
+{
+  "jVID": 1,
+  "accountID": 3002,
+  "subAccountID": 2003,
+  "debit": 1000.0,
+  "credit": 1000.0,
+  "isDocumented": true,
+  "notes": "مدين ودائن معاً",
+  "branchID": 1
+}
+
+### Test JVDetail Endpoint - No Debit No Credit (Should Fail)
+POST https://localhost:7240/api/JVDetail
+Content-Type: application/json
+Accept: application/json
+
+{
+  "jVID": 1,
+  "accountID": 3002,
+  "subAccountID": 2003,
+  "debit": null,
+  "credit": null,
+  "isDocumented": true,
+  "notes": "لا مدين ولا دائن",
+  "branchID": 1
+}
+
+### Get All JVDetails
+GET https://localhost:7240/api/JVDetail
+Content-Type: application/json
+Accept: application/json
+
+### Get JVDetails by JV ID
+GET https://localhost:7240/api/JVDetail/jv/1
+Content-Type: application/json
+Accept: application/json 
