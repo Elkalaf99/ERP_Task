@@ -16,7 +16,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var branches = await _httpClient.GetFromJsonAsync<List<Branch>>("api/branch");
+                var branches = await _httpClient.GetFromJsonAsync<List<Branch>>("Branch");
                 return branches ?? new List<Branch>();
             }
             catch (Exception ex)
@@ -30,7 +30,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<Branch>($"api/branch/{id}");
+                return await _httpClient.GetFromJsonAsync<Branch>($"Branch/{id}");
             }
             catch (Exception ex)
             {
@@ -43,7 +43,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/branch", branch);
+                var response = await _httpClient.PostAsJsonAsync("Branch", branch);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<Branch>() ?? branch;
             }
@@ -58,7 +58,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync($"api/branch/{id}", branch);
+                var response = await _httpClient.PutAsJsonAsync($"Branch/{id}", branch);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<Branch>() ?? branch;
             }
@@ -73,7 +73,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"api/branch/{id}");
+                var response = await _httpClient.DeleteAsync($"Branch/{id}");
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

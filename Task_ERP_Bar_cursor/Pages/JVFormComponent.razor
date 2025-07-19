@@ -176,7 +176,7 @@
                     {
                         <tr class="@GetRowClass(jv)" @onclick="@(() => SelectJV(jv))" style="cursor: pointer;">
                             <td><strong>@jv.JVNumber</strong></td>
-                            <td>@jv.JVDate.ToString("dd/MM/yyyy")</td>
+                            <td><span class="text-dark fw-bold" style="color: black !important;">@jv.JVDate.ToString("dd/MM/yyyy")</span></td>
                             <td>
                                 <span class="badge bg-info">@GetJVTypeName(jv.JVTypeID)</span>
                             </td>

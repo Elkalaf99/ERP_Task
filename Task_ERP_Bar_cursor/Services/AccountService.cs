@@ -16,7 +16,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var accounts = await _httpClient.GetFromJsonAsync<List<Account>>("api/account");
+                var accounts = await _httpClient.GetFromJsonAsync<List<Account>>("Account");
                 return accounts ?? new List<Account>();
             }
             catch (Exception ex)
@@ -30,7 +30,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<Account>($"api/account/{id}");
+                return await _httpClient.GetFromJsonAsync<Account>($"Account/{id}");
             }
             catch (Exception ex)
             {
@@ -43,7 +43,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/account", account);
+                var response = await _httpClient.PostAsJsonAsync("Account", account);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<Account>() ?? account;
             }
@@ -58,7 +58,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync($"api/account/{id}", account);
+                var response = await _httpClient.PutAsJsonAsync($"Account/{id}", account);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<Account>() ?? account;
             }
@@ -73,7 +73,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"api/account/{id}");
+                var response = await _httpClient.DeleteAsync($"Account/{id}");
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

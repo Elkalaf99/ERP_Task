@@ -16,7 +16,7 @@
 /* General Styles */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
+  background-color: white;
 }
 
 /* Card Enhancements */
@@ -246,8 +246,8 @@ header {
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   body {
-    background-color: #1a1a1a;
-    color: #ffffff;
+    background-color: white;
+    color: #333333;
   }
 
   .card {

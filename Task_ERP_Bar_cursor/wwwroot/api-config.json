@@ -1,6 +1,6 @@
 {
   "ApiEndpoints": {
-    "BaseUrl": "https://localhost:7240/",
+    "BaseUrl": "https://localhost:7240/api",
     "JVs": {
       "GetAll": "api/jv",
       "GetById": "api/jv/{id}",
@@ -10,11 +10,11 @@
       "GenerateNumber": "api/jv/generate-number"
     },
     "Accounts": {
-      "GetAll": "api/account",
-      "GetById": "api/account/{id}",
-      "Create": "api/account",
-      "Update": "api/account/{id}",
-      "Delete": "api/account/{id}"
+      "GetAll": "Account",
+      "GetById": "Account/{id}",
+      "Create": "Account",
+      "Update": "Account/{id}",
+      "Delete": "Account/{id}"
     },
     "SubAccounts": {
       "GetAll": "api/subaccount",
@@ -31,11 +31,11 @@
       "Delete": "api/jvtype/{id}"
     },
     "Branches": {
-      "GetAll": "api/branch",
-      "GetById": "api/branch/{id}",
-      "Create": "api/branch",
-      "Update": "api/branch/{id}",
-      "Delete": "api/branch/{id}"
+      "GetAll": "Branch",
+      "GetById": "Branch/{id}",
+      "Create": "Branch",
+      "Update": "Branch/{id}",
+      "Delete": "Branch/{id}"
     },
     "JVDetails": {
       "GetAll": "api/jvdetail",
