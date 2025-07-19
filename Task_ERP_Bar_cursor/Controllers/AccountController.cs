@@ -21,7 +21,7 @@ namespace Task_ERP_Bar.Controllers
         {
             try
             {
-                var accounts = await _accountService.GetAccountsAsync();
+                var accounts = await _accountService.GetAllAccountsAsync();
                 return Ok(accounts);
             }
             catch (Exception ex)
