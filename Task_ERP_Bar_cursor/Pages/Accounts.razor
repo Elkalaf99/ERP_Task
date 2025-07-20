@@ -95,19 +95,7 @@
                 </select>
             </div>
             
-            <div class="col-md-3">
-                <label class="form-label fw-bold">
-                    <i class="bi bi-funnel me-1"></i>
-                    @(selectedLanguage == "Arabic" ? "الحالة" : "Status")
-                </label>
-                <select class="form-select" @bind="selectedStatus">
-                    <option value="">@(selectedLanguage == "Arabic" ? "جميع الحالات" : "All Status")</option>
-                    <option value="true">@(selectedLanguage == "Arabic" ? "نشط" : "Active")</option>
-                    <option value="false">@(selectedLanguage == "Arabic" ? "غير نشط" : "Inactive")</option>
-                </select>
-            </div>
-            
-            <div class="col-md-2">
+            <div class="col-md-2">  
                 <button class="btn btn-primary w-100" @onclick="LoadAccounts" disabled="@isLoading">
                     @if (isLoading)
                     {
@@ -164,10 +152,6 @@
                                     <i class="bi bi-building me-1"></i>
                                     @(selectedLanguage == "Arabic" ? "الفرع" : "Branch")
                                 </th>
-                                <th style="width: 100px;" class="text-center">
-                                    <i class="bi bi-check-circle me-1"></i>
-                                    @(selectedLanguage == "Arabic" ? "الحالة" : "Status")
-                                </th>
                                 <th style="width: 150px;" class="text-center">
                                     <i class="bi bi-gear me-1"></i>
                                     @(selectedLanguage == "Arabic" ? "الإجراءات" : "Actions")
@@ -208,22 +192,6 @@
                                         else
                                         {
                                             <span class="text-muted">-</span>
-                                        }
-                                    </td>
-                                    <td class="text-center">
-                                        @if (account.IsActive)
-                                        {
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle me-1"></i>
-                                                @(selectedLanguage == "Arabic" ? "نشط" : "Active")
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-danger">
-                                                <i class="bi bi-x-circle me-1"></i>
-                                                @(selectedLanguage == "Arabic" ? "غير نشط" : "Inactive")
-                                            </span>
                                         }
                                     </td>
                                     <td class="text-center">
@@ -285,7 +253,6 @@
     // Filter properties
     private string searchTerm = string.Empty;
     private int selectedBranchId = 0;
-    private string selectedStatus = string.Empty;
     
     // Computed properties
     private List<Account> filteredAccounts => accounts
@@ -294,9 +261,6 @@
                    a.AccountNameAr.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
                    a.AccountNameEn?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) == true)
         .Where(a => selectedBranchId == 0 || a.BranchID == selectedBranchId)
-        .Where(a => string.IsNullOrEmpty(selectedStatus) || 
-                   (selectedStatus == "true" && a.IsActive) ||
-                   (selectedStatus == "false" && !a.IsActive))
         .ToList();
 
     protected override async Task OnInitializedAsync()

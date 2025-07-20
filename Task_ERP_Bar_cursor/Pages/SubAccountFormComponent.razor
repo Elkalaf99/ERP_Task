@@ -13,7 +13,9 @@
 </style>
 
 @using Task_ERP_Bar.Models
+@using Task_ERP_Bar.Services
 @inject NavigationManager Navigation
+@inject IApiService ApiService
 
 @code {
     private string selectedLanguage = "English";
@@ -22,15 +24,32 @@
     private string activeTab = "Account";
     private bool isLoading = false;
     private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
 
     // Form data
     private CreateSubAccountRequest subAccountModel = new();
     private List<Branch> branches = new();
     private List<SubAccount> subAccounts = new();
+    private List<Account> accounts = new();
+    private int? selectedAccountId = null;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "خطأ: " + ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 
     private async Task LoadData()
@@ -59,9 +78,40 @@
         }
     }
 
+    private async Task LoadAccountsTab()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            
+            // تحميل الحسابات والفروع معاً
+            var accountsTask = ApiService.GetAllAsync<Account>("Account");
+            var branchesTask = ApiService.GetAllAsync<Branch>("Branch");
+            
+            await Task.WhenAll(accountsTask, branchesTask);
+            
+            accounts = await accountsTask;
+            branches = await branchesTask;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"خطأ في تحميل الحسابات: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
     private void SelectTab(string tabName)
     {
         activeTab = tabName;
+        if(tabName == "Account")
+        {
+            _ = LoadAccountsTab();
+        }
     }
 
     private void ChangeLanguage(ChangeEventArgs e)
@@ -82,24 +132,53 @@
         {
             isLoading = true;
             errorMessage = string.Empty;
+            successMessage = string.Empty;
 
-            // var result = await ApiService.CreateSubAccountAsync(subAccountModel);
+            // تحقق من الحقول المطلوبة
+            if (subAccountModel.BranchID == null || subAccountModel.BranchID == 0)
+            {
+                errorMessage = "يجب اختيار جميع الحقول المطلوبة (الفرع)";
+                return;
+            }
+
+            // إنشاء كائن Account من البيانات المدخلة (فقط الحقول المطلوبة)
+            var account = new Account
+            {
+                AccountNumber = subAccountModel.SubAccountNumber,
+                AccountNameAr = subAccountModel.SubAccountNameAr,
+                AccountNameEn = subAccountModel.SubAccountNameEn,
+                BranchID = subAccountModel.BranchID ?? 0
+            };
+
+            // حفظ البيانات عبر الـAPI
+            var result = await ApiService.CreateAsync<Account>("Account", account);
             
-            // Reset form
-            subAccountModel = new();
-            
-            // Reload data
-            await LoadData();
-            
-            // Show success message (you can add a toast notification here)
+            if (result != null)
+            {
+                subAccountModel = new();
+                selectedAccountId = null;
+                await LoadData();
+                successMessage = selectedLanguage == "Arabic" 
+                    ? "تم حفظ الحساب بنجاح" 
+                    : "Account saved successfully";
+            }
+            else
+            {
+                errorMessage = selectedLanguage == "Arabic"
+                    ? "فشل في حفظ الحساب"
+                    : "Failed to save account";
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"خطأ في حفظ البيانات: {ex.Message}";
+            errorMessage = selectedLanguage == "Arabic"
+                ? $"خطأ في حفظ البيانات: {ex.Message}"
+                : $"Error saving data: {ex.Message}";
         }
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -139,6 +218,74 @@
             SubAccountTypeID = subAccount.SubAccountTypeID,
             IsActive = subAccount.IsActive
         };
+    }
+
+    private void FillAccountFields(Account acc)
+    {
+        subAccountModel.SubAccountNumber = acc.AccountNumber;
+        subAccountModel.SubAccountNameAr = acc.AccountNameAr;
+        subAccountModel.SubAccountNameEn = acc.AccountNameEn;
+        subAccountModel.BranchID = acc.BranchID;
+        selectedAccountId = acc.AccountID;
+    }
+
+    private async Task UpdateAccount()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+
+            if (selectedAccountId == null)
+            {
+                errorMessage = "يجب اختيار حساب للتعديل";
+                return;
+            }
+            if (subAccountModel.BranchID == null || subAccountModel.BranchID == 0)
+            {
+                errorMessage = "يجب اختيار جميع الحقول المطلوبة (الفرع)";
+                return;
+            }
+
+            // جسم الطلب فقط الحقول المطلوبة
+            var account = new Account
+            {
+                AccountNumber = subAccountModel.SubAccountNumber,
+                AccountNameAr = subAccountModel.SubAccountNameAr,
+                AccountNameEn = subAccountModel.SubAccountNameEn,
+                BranchID = subAccountModel.BranchID ?? 0
+            };
+
+            // الطلب إلى /Account/{id}
+            var result = await ApiService.UpdateAsync<Account>("Account", selectedAccountId.Value, account);
+            if (result != null)
+            {
+                subAccountModel = new();
+                selectedAccountId = null;
+                await LoadData();
+                successMessage = selectedLanguage == "Arabic"
+                    ? "تم تعديل الحساب بنجاح"
+                    : "Account updated successfully";
+            }
+            else
+            {
+                errorMessage = selectedLanguage == "Arabic"
+                    ? "فشل في تعديل الحساب"
+                    : "Failed to update account";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = selectedLanguage == "Arabic"
+                ? $"خطأ في تعديل البيانات: {ex.Message}"
+                : $"Error updating data: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
 }
 
@@ -256,6 +403,12 @@
                 @errorMessage
             </div>
         }
+        @if (!string.IsNullOrEmpty(successMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                @successMessage
+            </div>
+        }
 
         @if (isLoading)
         {
@@ -282,14 +435,6 @@
                    @bind="subAccountModel.SubAccountNameEn" />
         </div>
         <div class="mb-2 d-flex align-items-center">
-            <label class="form-label me-2 mb-0" style="width: 220px;"><strong>Type</strong></label>
-            <select class="form-select form-select-sm" style="width: 400px;" @bind="subAccountModel.SubAccountTypeID">
-                <option value="0">Select Type</option>
-                <option value="1">Type 1</option>
-                <option value="2">Type 2</option>
-            </select>
-        </div>
-        <div class="mb-2 d-flex align-items-center">
             <label class="form-label me-2 mb-0" style="width: 220px;"><strong>Branch</strong></label>
             <select class="form-select form-select-sm" style="width: 400px;" @bind="subAccountModel.BranchID">
                 <option value="0">Select Branch</option>
@@ -300,15 +445,15 @@
             </select>
         </div>
 
+        <!-- زر الحفظ والتعديل -->
         <div class="mb-3 d-flex gap-2">
-            <button class="btn btn-primary btn-sm" @onclick="SaveSubAccount" disabled="@isLoading">
-                @if (isLoading)
-                {
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                }
+            <button class="btn btn-primary btn-sm" @onclick="SaveSubAccount">
                 حفظ
             </button>
-            <button class="btn btn-secondary btn-sm" @onclick="() => subAccountModel = new()" disabled="@isLoading">
+            <button class="btn btn-warning btn-sm" @onclick="UpdateAccount">
+                تعديل
+            </button>
+            <button class="btn btn-secondary btn-sm" @onclick="() => { subAccountModel = new(); selectedAccountId = null; }">
                 إعادة تعيين
             </button>
         </div>
@@ -338,7 +483,67 @@
 
         <!-- 🔽 محتوى الجدول المتغير -->
         <div class="mt-3">
-            <p>محتوى التبويب: @activeTab</p>
+            @if(activeTab == "Account")
+            {
+                @if(isLoading)
+                {
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">جاري التحميل...</span>
+                        </div>
+                    </div>
+                }
+                else if(accounts.Count == 0)
+                {
+                    <div class="text-center text-muted">
+                        <p>لا توجد حسابات</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>الكود</th>
+                                    <th>الاسم (عربي)</th>
+                                    <th>الاسم (إنجليزي)</th>
+                                    <th>الفرع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach(var acc in accounts)
+                                {
+                                    <tr @onclick="() => FillAccountFields(acc)" style="cursor:pointer;">
+                                        <td>@acc.AccountNumber</td>
+                                        <td>@acc.AccountNameAr</td>
+                                        <td>@acc.AccountNameEn</td>
+                                        <td>
+                                            @{
+                                                var branch = branches?.FirstOrDefault(b => b.BranchID == acc.BranchID);
+                                            }
+                                            @if (branch != null)
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    @(selectedLanguage == "Arabic" ? branch.BranchNameAr : branch.BranchNameEn)
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">@acc.BranchID</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+            else
+            {
+                <p>محتوى التبويب: @activeTab</p>
+            }
         </div>
     </div>
 

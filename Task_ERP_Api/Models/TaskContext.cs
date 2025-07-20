@@ -51,7 +51,7 @@ public partial class TaskContext : DbContext
                 .IsUnique()
                 .HasFillFactor(80);
 
-            entity.Property(e => e.AccountID).ValueGeneratedNever();
+            entity.Property(e => e.AccountID).ValueGeneratedOnAdd();
 
             entity.HasOne(d => d.Branch).WithMany(p => p.Accounts).HasConstraintName("FK_Accounts_Branches");
         });

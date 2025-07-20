@@ -17,7 +17,7 @@ namespace Task_ERP_Bar
             var apiBaseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7240/api";
 
             // Configure HTTP client for API calls
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
+            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7240/api/") });
             
             // Register the new ApiService
             builder.Services.AddScoped<IApiService, ApiService>();

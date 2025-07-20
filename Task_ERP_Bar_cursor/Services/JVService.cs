@@ -16,7 +16,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync("api/jv");
+                var response = await _httpClient.GetAsync("jv");
                 if (response.IsSuccessStatusCode)
                 {
                     var jvs = await response.Content.ReadFromJsonAsync<List<JV>>();
@@ -39,7 +39,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"api/jv/{jvId}");
+                var response = await _httpClient.GetAsync($"jv/{jvId}");
                 if (response.IsSuccessStatusCode)
                 {
                     return await response.Content.ReadFromJsonAsync<JV>();

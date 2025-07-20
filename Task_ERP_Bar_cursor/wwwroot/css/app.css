@@ -119,3 +119,54 @@ code {
 .date-text:hover {
   color: black !important;
 }
+
+/* جداول زرقاء موحدة */
+.table thead,
+.table thead th,
+.table thead tr {
+  background-color: #007bff !important; /* أزرق غامق */
+  color: #fff !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #e3f0ff !important; /* أزرق فاتح عند التحديد */
+}
+
+.table .btn,
+.table .badge {
+  background-color: #007bff !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.table,
+.table th,
+.table td {
+  border-color: #007bff !important;
+}
+
+/* توحيد أزرار الجدول */
+.btn-primary,
+.table .btn-primary {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+  color: #fff !important;
+}
+
+/* توحيد لون النص في رؤوس الجداول */
+.table-primary,
+.bg-primary,
+.table .table-primary th {
+  background-color: #007bff !important;
+  color: #fff !important;
+}
+
+/* خلفية رمادية للـ main */
+main {
+  background-color: #f8f9fa !important; /* رمادي فاتح */
+}
+
+/* أو إذا أردت رمادي أغمق */
+/* main {
+    background-color: #e9ecef !important;
+} */

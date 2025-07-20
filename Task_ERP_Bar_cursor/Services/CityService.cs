@@ -16,7 +16,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var cities = await _httpClient.GetFromJsonAsync<List<City>>("api/city");
+                var cities = await _httpClient.GetFromJsonAsync<List<City>>("city");
                 return cities ?? new List<City>();
             }
             catch (Exception ex)
@@ -30,7 +30,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<City>($"api/city/{id}");
+                return await _httpClient.GetFromJsonAsync<City>($"city/{id}");
             }
             catch (Exception ex)
             {
@@ -43,7 +43,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.PostAsJsonAsync("api/city", city);
+                var response = await _httpClient.PostAsJsonAsync("city", city);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<City>() ?? city;
             }
@@ -58,7 +58,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync($"api/city/{id}", city);
+                var response = await _httpClient.PutAsJsonAsync($"city/{id}", city);
                 response.EnsureSuccessStatusCode();
                 return await response.Content.ReadFromJsonAsync<City>() ?? city;
             }
@@ -73,7 +73,7 @@ namespace Task_ERP_Bar.Services
         {
             try
             {
-                var response = await _httpClient.DeleteAsync($"api/city/{id}");
+                var response = await _httpClient.DeleteAsync($"city/{id}");
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
